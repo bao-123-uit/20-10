@@ -641,13 +641,15 @@ function PhotoItem({ d, n }: { d: D; n: number }) {
   );
 }
 
-function PhotoSpace() {
+function PhotoSpace({ hidden = false }: { hidden?: boolean }) {
   const { size } = useThree();
   const viewportAspect = size.width / size.height;
   const { data, total } = useMemo(() => buildData(viewportAspect), [viewportAspect]);
   const root = useRef<THREE.Group>(null);
   const core = useRef<THREE.Mesh>(null);
   useFrame((_, dt) => {
+    if (root.current) root.current.visible = !hidden;
+    if (hidden) return;
     if (root.current) {
       if (S.gallery < 0.02) {
         root.current.rotation.y += dt * 0.28 * clamp(S.sphere, 0, 1);
@@ -724,6 +726,14 @@ function Letter({ onRestart, onClose }: { onRestart: () => void; onClose: () => 
     return () => clearTimeout(t);
   }, [started, n, done, full]);
 
+  useEffect(() => {
+    const element = content.current;
+    if (!element) return;
+    requestAnimationFrame(() => {
+      element.scrollTo({ top: element.scrollHeight, behavior: "smooth" });
+    });
+  }, [n, done]);
+
   return (
     <div className="absolute inset-0 z-10 grid place-items-center overflow-hidden px-4 py-[max(1.5rem,env(safe-area-inset-top))] pb-[max(1.5rem,env(safe-area-inset-bottom))]">
       <div
@@ -736,16 +746,15 @@ function Letter({ onRestart, onClose }: { onRestart: () => void; onClose: () => 
           backgroundRepeat: "no-repeat",
         }}
       >
-        <div ref={content} className="absolute inset-x-[8%] bottom-[2%] top-[50%] overflow-hidden">
+        <div ref={content} className="absolute inset-x-[8%] bottom-[13%] top-[50%] overflow-y-auto overscroll-contain pb-14 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         <h2 className="text-center text-2xl leading-tight text-[#C0306F] sm:text-3xl" style={{ fontFamily: "var(--font-great-vibes), cursive" }}>
           {LETTER.title}
         </h2>
 
         {/* giữ chỗ bằng chữ trong suốt để khung thư không bị nhảy khi gõ */}
-        <p className="mt-3 whitespace-pre-wrap text-[0.82rem] leading-[1.38] text-[#673653] sm:text-[0.9rem] sm:leading-[1.45]" style={{ fontFamily: "var(--font-cormorant), Georgia, serif" }}>
+        <p className="mt-3 whitespace-pre-wrap text-[0.78rem] leading-[1.38] text-[#673653] sm:text-[0.9rem] sm:leading-[1.45]" style={{ fontFamily: "var(--font-cormorant), Georgia, serif" }}>
           {full.slice(0, n)}
           {!done && started && <span className="ml-0.5 inline-block h-[1.1em] w-[2px] animate-pulse bg-[#C0306F] align-middle" />}
-          <span className="opacity-0" aria-hidden>{full.slice(n)}</span>
         </p>
 
         {done && (
@@ -762,17 +771,19 @@ function Letter({ onRestart, onClose }: { onRestart: () => void; onClose: () => 
                 className="mt-6 max-h-72 w-full rounded-xl object-cover shadow-lg"
               />
             )}
-            <div className="mt-2 flex flex-wrap justify-center gap-2">
-              <button onClick={onRestart} className="inline-flex items-center gap-1.5 rounded-full bg-[#C0306F] px-4 py-2 text-xs font-medium text-white shadow-lg transition hover:scale-105 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#C0306F]">
-                <RotateCcw className="h-4 w-4" aria-hidden /> Đọc lại từ đầu
-              </button>
-              <button onClick={onClose} className="rounded-full bg-white/70 px-4 py-2 text-xs font-medium text-[#8A2656] transition hover:bg-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#C0306F]">
-                Về trang chủ
-              </button>
-            </div>
           </motion.div>
         )}
         </div>
+        {done && (
+          <div className="absolute inset-x-[5%] bottom-[2.5%] z-30 flex flex-wrap justify-center gap-2">
+            <button onClick={onRestart} className="inline-flex items-center gap-1.5 rounded-full bg-[#C0306F] px-4 py-2 text-xs font-medium text-white shadow-lg transition hover:scale-105 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#C0306F]">
+              <RotateCcw className="h-4 w-4" aria-hidden /> Đọc lại từ đầu
+            </button>
+            <button onClick={onClose} className="rounded-full bg-white/90 px-4 py-2 text-xs font-medium text-[#8A2656] shadow-lg transition hover:bg-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#C0306F]">
+              Về trang chủ
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -863,10 +874,16 @@ export default function GiftExperience({ onClose, audioRef }: {
     // Scene 5: ảnh tách khỏi quả cầu, camera mở rộng rồi bay xuyên không gian ảnh
     to({ gallery: 1, camZ: 11, lookZ: 0, sway: 0 }, 4, 28.8);
     to({ camZ: 11, lookZ: 0, sway: 0 }, 9, 32.8, "sine.inOut");
-    to({ photoVis: 0, glow: 0, vis: 0.2 }, 3, 41.5, "power1.in");
+    to({ photoVis: 0, glow: 0, vis: 0.2 }, 2.2, 41.3, "power1.in");
 
     // Scene 6: thư
-    tl.call(() => { setCaption(""); setLetter(true); }, undefined, 44.2);
+    tl.call(() => {
+      S.photoVis = 0;
+      S.glow = 0;
+      setCaption("");
+      setTypedCaption("");
+      setLetter(true);
+    }, undefined, 44.2);
 
     CAPTIONS.forEach((c) => {
       tl.call(() => setCaption(c.text), undefined, c.at);
@@ -883,6 +900,7 @@ export default function GiftExperience({ onClose, audioRef }: {
     tlRef.current?.kill();
     Object.assign(S, { photoVis: 0, glow: 0, bouquet: 0, streak: 0, vis: 0.2, stars: 1 });
     setCaption("");
+    setTypedCaption("");
     setLetter(true);
   };
   const restart = () => { setLetter(false); play(); };
@@ -915,7 +933,7 @@ export default function GiftExperience({ onClose, audioRef }: {
         <NebulaParticles count={counts.particles} />
         <Streaks />
         <RealBouquetScene bouquet={bouquetImage} />
-        <PhotoSpace />
+        <PhotoSpace hidden={letter} />
       </Canvas>
 
       <div className="pointer-events-none absolute inset-0 z-[2] flex items-center justify-center">
@@ -934,17 +952,17 @@ export default function GiftExperience({ onClose, audioRef }: {
       />
 
       <AnimatePresence mode="wait">
-        {typedCaption && (
+        {!letter && typedCaption && (
           <motion.p
             key={caption}
             initial={{ opacity: 0, y: 18, filter: "blur(8px)" }}
             animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
             exit={{ opacity: 0, y: -12, filter: "blur(6px)" }}
             transition={{ duration: 0.7, ease: "easeOut" }}
-            className="pointer-events-none absolute inset-x-0 bottom-[max(4.5rem,env(safe-area-inset-bottom))] px-6 text-center text-xl leading-relaxed text-[#FFE3F0] drop-shadow-[0_2px_14px_rgba(255,79,163,.75)] sm:text-2xl"
+            className="pointer-events-none absolute inset-x-0 bottom-[max(1.25rem,env(safe-area-inset-bottom))] z-[4] flex justify-center px-3 text-center text-base leading-snug text-[#FFE3F0] drop-shadow-[0_2px_14px_rgba(255,79,163,.75)] sm:px-6 sm:text-2xl sm:leading-relaxed"
             style={{ fontFamily: "var(--font-script), cursive" }}
           >
-            <span className="inline-block rounded-full border border-[#FFC6E5]/20 bg-[#180919]/20 px-5 py-2 backdrop-blur-[2px]">
+            <span className="inline-block max-w-[min(94vw,52rem)] whitespace-normal break-words rounded-2xl border border-[#FFC6E5]/25 bg-[#180919]/75 px-4 py-2.5 backdrop-blur-[5px] sm:px-6 sm:py-3">
               {typedCaption.split("").map((character, index) => (
                 <motion.span
                   key={`${caption}-${index}`}
