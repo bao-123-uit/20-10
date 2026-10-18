@@ -37,21 +37,21 @@ const PHOTOS = [
 
 // Dòng chữ nhỏ hiện giữa các cảnh (at = giây trên timeline)
 const CAPTIONS = [
-  { at: 3.2, text: "Có một điều nhỏ xíu, mình muốn gửi riêng cho bạn..." },
-  { at: 11.5, text: "Một bó hoa, chúc bạn luôn rạng rỡ." },
-  { at: 19, text: "Những khoảnh khắc mình muốn giữ lại." },
-  { at: 31, text: "Mỗi bức ảnh là một lần mình thấy vui." },
+  { at: 3.2, text: "Có một điều nho nhỏ,anh muốn gửi riêng cho em..." },
+  { at: 11.5, text: "Một bó hoa, chúc em luôn rạng rỡ.(Vì cũng không biết được địa chỉ nhà em nên em nhận hoa online trước nhé)" },
+  { at: 19, text: "Thấy hay không em hihi." },
+  { at: 31, text: "Em coi nhiều ảnh chưa nè hehe." },
 ];
 
 const LETTER = {
   title: "Gửi Phương Linh,",
   lines: [
-    "Nhân ngày 20/10, mình chúc Linh một ngày thật rạng rỡ.",
-    "Mong bạn luôn được cười thật nhiều, luôn thấy mình được trân trọng, và những điều dịu dàng nhất sẽ tìm đến bạn.",
-    "[Thêm một điều thật lòng của bạn vào đây]",
-    "Cảm ơn Linh vì đã đọc đến cuối thư này.",
+    "Nhân ngày 20/10, anh chúc em một ngày thật vui vẻ, rạng rỡ.",
+    "Mong em luôn cười thật nhiều, luôn thấy mình được trân trọng, và những điều tốt đẹp nhất sẽ đến với em.",
+    "Hmmm, anh cũng không biết nói gì hơn, chỉ muốn gửi đến em một món quà nho nhỏ, hy vọng em sẽ thích.",
+    "Cảm ơn em vì đã xem đến cuối. Em cũng đừng cảm động quá nghe. Anh màaa, mấy cái ni đơn giản thoai hehee",
   ],
-  signature: "— [Tên bạn]",
+  signature: "— [Minh Bảo]",
   photo: "/images/letter.jpg", // ảnh cuối thư; xóa dòng này nếu không dùng
 };
 
