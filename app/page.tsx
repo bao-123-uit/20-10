@@ -285,7 +285,7 @@ function MemoryStrip() {
       <section
         ref={stripRef}
         className="relative mt-10 w-screen max-w-[100vw] overflow-hidden py-7 [mask-image:linear-gradient(to_right,transparent,black_7%,black_93%,transparent)]"
-        aria-label="Dải kỷ niệm"
+        aria-label="Tin nổi bật nè!"
         onMouseEnter={() => setPaused(true)}
         onMouseLeave={() => setPaused(false)}
         onPointerDown={() => setPaused(true)}
@@ -297,7 +297,7 @@ function MemoryStrip() {
             <span key={i} className="absolute text-[#FFE5A0]" style={{ left: `${(i * 17) % 100}%`, top: `${18 + (i % 4) * 20}%`, fontSize: i % 3 ? 10 : 14 }}>✦</span>
           ))}
         </div>
-        <p className="relative z-10 mb-4 text-xs font-semibold uppercase tracking-[0.3em] text-[#B06A87]">Dải kỷ niệm</p>
+        <p className="relative z-10 mb-4 text-xs font-semibold uppercase tracking-[0.3em] text-[#B06A87]">Tin nổi bật nè!</p>
         <div className="relative z-10 space-y-3">
           {rows.map((row, rowIndex) => (
             <div key={rowIndex} className="relative overflow-visible">
