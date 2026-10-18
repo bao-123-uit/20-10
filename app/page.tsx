@@ -373,7 +373,7 @@ export default function Home() {
       }}
     >
       <audio ref={audioRef} src="/emxinh.mp3" loop autoPlay />
-      {gift && <GiftExperience audioRef={audioRef} onClose={() => { setGift(false); router.push("/ban-trong-mat-minh"); }} />}
+      {gift && <GiftExperience audioRef={audioRef} onClose={() => { setGift(false); router.push("/"); }} />}
       <Fireflies />
       <Petals />
       <CornerFriends />
