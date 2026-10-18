@@ -701,6 +701,43 @@ function FlowerGarden() {
   );
 }
 
+function LetterFriends() {
+  return (
+    <div className="pointer-events-none absolute inset-0 z-[12] overflow-hidden" aria-hidden>
+      <motion.div
+        className="absolute -left-2 bottom-[8%] h-[min(48vw,22rem)] w-[min(34vw,16rem)] sm:left-[2%] sm:bottom-[10%] sm:h-[min(42vw,25rem)] sm:w-[min(28vw,17rem)]"
+        initial={{ opacity: 0, x: -70, y: 24, rotate: -12, scale: 0.72 }}
+        animate={{ opacity: 1, x: [0, 5, 0], y: [0, -12, 0], rotate: [-4, -1, -4], scale: [1, 1.035, 1] }}
+        transition={{
+          opacity: { duration: 0.8, ease: "easeOut" },
+          x: { duration: 5.2, repeat: Infinity, ease: "easeInOut" },
+          y: { duration: 4.4, repeat: Infinity, ease: "easeInOut" },
+          rotate: { duration: 5.6, repeat: Infinity, ease: "easeInOut" },
+          scale: { duration: 4.8, repeat: Infinity, ease: "easeInOut" },
+        }}
+      >
+        <span className="absolute inset-[18%] rounded-full bg-[#FF86BB]/30 blur-2xl" />
+        <img src="/i1.png" alt="" className="relative h-full w-full object-contain drop-shadow-[0_10px_20px_rgba(255,79,163,.42)]" />
+      </motion.div>
+      <motion.div
+        className="absolute -right-2 bottom-[8%] h-[min(48vw,22rem)] w-[min(34vw,16rem)] sm:right-[2%] sm:bottom-[10%] sm:h-[min(42vw,25rem)] sm:w-[min(28vw,17rem)]"
+        initial={{ opacity: 0, x: 70, y: 24, rotate: 12, scale: 0.72 }}
+        animate={{ opacity: 1, x: [0, -5, 0], y: [0, -14, 0], rotate: [4, 1, 4], scale: [1, 1.035, 1] }}
+        transition={{
+          opacity: { duration: 0.8, ease: "easeOut", delay: 0.15 },
+          x: { duration: 5.5, repeat: Infinity, ease: "easeInOut" },
+          y: { duration: 4.7, repeat: Infinity, ease: "easeInOut", delay: 0.4 },
+          rotate: { duration: 5.9, repeat: Infinity, ease: "easeInOut", delay: 0.2 },
+          scale: { duration: 5.1, repeat: Infinity, ease: "easeInOut", delay: 0.3 },
+        }}
+      >
+        <span className="absolute inset-[18%] rounded-full bg-[#FF86BB]/30 blur-2xl" />
+        <img src="/i2.png" alt="" className="relative h-full w-full object-contain drop-shadow-[0_10px_20px_rgba(255,79,163,.42)]" />
+      </motion.div>
+    </div>
+  );
+}
+
 function Letter({ onRestart, onClose }: { onRestart: () => void; onClose: () => void }) {
   const card = useRef<HTMLDivElement>(null);
   const content = useRef<HTMLDivElement>(null);
@@ -1003,6 +1040,7 @@ export default function GiftExperience({ onClose, audioRef }: {
       </div>
 
       {letter && <FlowerGarden />}
+      {letter && <LetterFriends />}
       {letter && <Letter onRestart={restart} onClose={onClose} />}
     </div>
   );
