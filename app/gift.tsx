@@ -392,6 +392,19 @@ const SPHERE_RADIUS = 3;
 const SPHERE_ROWS = 7;
 const SPHERE_GAP = -0.004;
 const smooth = THREE.MathUtils.smootherstep;
+const CAMERA_FOV = 50;
+const NARROW_ASPECT = 1.5;
+
+function narrowCameraDistance(aspect: number, stage: "field" | "sphere" | "gallery") {
+  const tanHalfFov = Math.tan(THREE.MathUtils.degToRad(CAMERA_FOV / 2));
+  if (stage === "gallery") return 14.3;
+  if (stage === "sphere") {
+    const diameter = SPHERE_RADIUS * 2;
+    return Math.max(diameter / 2 / tanHalfFov, diameter / 2 / (tanHalfFov * aspect)) * 1.1;
+  }
+  const fieldSize = 10;
+  return Math.max(fieldSize / 2 / tanHalfFov, fieldSize / 2 / (tanHalfFov * aspect)) * 1.1;
+}
 
 let fb: THREE.CanvasTexture | null = null;
 function fallbackTex() {
@@ -432,10 +445,11 @@ type D = {
 };
 
 function buildData(viewportAspect: number) {
-  const cameraZ = viewportAspect < 0.8 ? 14.3 : 11;
-  const viewHeight = 2 * cameraZ * Math.tan(THREE.MathUtils.degToRad(50 / 2));
+  const narrow = viewportAspect < NARROW_ASPECT;
+  const cameraZ = narrow ? 14.3 : 11;
+  const viewHeight = 2 * cameraZ * Math.tan(THREE.MathUtils.degToRad(CAMERA_FOV / 2));
   const viewWidth = viewHeight * viewportAspect;
-  const targetCellWidth = viewportAspect < 0.8 ? 1.4 : 1.7;
+  const targetCellWidth = narrow ? (viewportAspect < 0.65 ? 1.65 : 1.5) : 1.7;
   const targetCellHeight = targetCellWidth * H;
   const cols = Math.ceil(viewWidth / targetCellWidth);
   const rows = Math.ceil(viewHeight / targetCellHeight);
@@ -448,9 +462,10 @@ function buildData(viewportAspect: number) {
   const galleryGapY = 0;
   const galleryWidth = viewWidth / actualCols;
   const galleryHeight = viewHeight / actualRows;
-  const foregroundHeight = viewHeight * (viewportAspect < 0.8 ? 0.44 : 0.46);
-  const midHeight = viewHeight * (viewportAspect < 0.8 ? 0.26 : 0.28);
-  const backHeight = viewHeight * (viewportAspect < 0.8 ? 0.12 : 0.13);
+  const foregroundHeight = viewHeight * (narrow ? 0.38 : 0.46);
+  const midHeight = viewHeight * (narrow ? 0.23 : 0.28);
+  const backHeight = viewHeight * (narrow ? 0.105 : 0.13);
+  const shellScale = narrow ? Math.min(8.5, viewHeight * 0.42) : 8.5;
   const sphereRows = Array.from({ length: SPHERE_ROWS }, (_, row) => {
     const thetaStart = row * Math.PI / SPHERE_ROWS;
     const thetaLength = Math.PI / SPHERE_ROWS;
@@ -496,13 +511,13 @@ function buildData(viewportAspect: number) {
       const shellRadius = Math.sqrt(Math.max(0, 1 - shellY * shellY));
       const shellAngle = i * golden;
       const shell = new THREE.Vector3(
-        Math.cos(shellAngle) * shellRadius * 8.5,
-        shellY * 8.5,
-        Math.sin(shellAngle) * shellRadius * 8.5,
+        Math.cos(shellAngle) * shellRadius * shellScale,
+        shellY * shellScale,
+        Math.sin(shellAngle) * shellRadius * shellScale,
       );
       const startX = shell.x * 0.78;
       const startY = shell.y * 0.78;
-      const startZ = -14 + ((shell.z / 8.5 + 1) * 0.5) * 17;
+      const startZ = -Math.max(10, shellScale * 1.65) + ((shell.z / shellScale + 1) * 0.5) * Math.max(17, shellScale * 2);
       const tier = i < 5 ? 0 : i < 20 ? 1 : 2;
       const targetHeight = tier === 0 ? foregroundHeight : tier === 1 ? midHeight : backHeight;
       const depthAlpha = tier === 0 ? 1 : tier === 1 ? 0.82 : 0.58;
@@ -832,16 +847,62 @@ function Letter({ onRestart, onClose }: { onRestart: () => void; onClose: () => 
 
 // Camera: parallax theo con trỏ/chạm, lùi xa hơn trên màn hình dọc, bay xuyên không gian ảnh
 function Rig() {
-  useFrame(({ camera, pointer, size, clock }) => {
-    const k = size.width / size.height < 0.8 ? 1.3 : 1;
+  useFrame(({ camera, pointer, size, clock }, dt) => {
+    const aspect = size.width / size.height;
+    const narrow = aspect < NARROW_ASPECT;
     const t = clock.elapsedTime;
     const galleryLock = 1 - clamp(S.gallery, 0, 1);
+    if (narrow) {
+      const stage = S.gallery > 0.02 ? "gallery" : S.sphere > 0.02 ? "sphere" : "field";
+      const targetZ = Math.max(S.camZ, narrowCameraDistance(aspect, stage));
+      camera.position.z = THREE.MathUtils.damp(camera.position.z, targetZ, 5, dt);
+    } else {
+      camera.position.z = S.camZ;
+    }
     camera.position.x += (pointer.x * 0.8 * galleryLock + Math.sin(t * 0.25) * S.sway * galleryLock - camera.position.x) * 0.04;
     camera.position.y += (pointer.y * 0.5 * galleryLock + Math.cos(t * 0.2) * S.sway * 0.4 * galleryLock - camera.position.y) * 0.04;
-    camera.position.z = S.camZ * k;
     camera.lookAt(0, 0, S.lookZ);
   });
   return null;
+}
+
+function DebugOverlay({ enabled }: { enabled: boolean }) {
+  const [viewport, setViewport] = useState({ width: 0, height: 0, fps: 0 });
+  const [fps, setFps] = useState(0);
+  const frames = useRef(0);
+  const last = useRef(performance.now());
+
+  useEffect(() => {
+    if (!enabled) return;
+    let frame = 0;
+    const tick = () => {
+      frames.current += 1;
+      const now = performance.now();
+      if (now - last.current >= 500) {
+        setFps(Math.round((frames.current * 1000) / (now - last.current)));
+        frames.current = 0;
+        last.current = now;
+      }
+      frame = requestAnimationFrame(tick);
+    };
+    const resize = () => setViewport({ width: window.innerWidth, height: window.innerHeight, fps });
+    resize();
+    frame = requestAnimationFrame(tick);
+    window.addEventListener("resize", resize);
+    return () => {
+      cancelAnimationFrame(frame);
+      window.removeEventListener("resize", resize);
+    };
+  }, [enabled, fps]);
+
+  if (!enabled) return null;
+  return (
+    <div className="pointer-events-none absolute left-2 top-2 z-[200] rounded-lg bg-black/70 px-3 py-2 font-mono text-[11px] leading-4 text-white">
+      {Math.round(viewport.width)}x{Math.round(viewport.height)} · aspect {(viewport.width / Math.max(viewport.height, 1)).toFixed(2)}
+      <br />
+      camera base {S.camZ.toFixed(2)} · FPS {fps}
+    </div>
+  );
 }
 
 export default function GiftExperience({ onClose, audioRef }: {
@@ -870,10 +931,28 @@ export default function GiftExperience({ onClose, audioRef }: {
   }, [caption]);
 
   // tự giảm tải trên điện thoại
-  const mobile = useMemo(
-    () => typeof window !== "undefined" && (window.innerWidth < 768 || /Mobi|Android/i.test(navigator.userAgent)),
+  const mobile = useMemo(() => {
+    if (typeof window === "undefined") return false;
+    return window.innerWidth / Math.max(window.innerHeight, 1) < 0.8
+      || window.matchMedia("(pointer: coarse)").matches;
+  }, []);
+  const debug = useMemo(
+    () => typeof window !== "undefined" && new URLSearchParams(window.location.search).get("debug") === "1",
     []
   );
+  useEffect(() => {
+    const refreshViewport = () => window.dispatchEvent(new Event("resize"));
+    window.visualViewport?.addEventListener("resize", refreshViewport);
+    document.documentElement.style.overscrollBehavior = "none";
+    document.body.style.overscrollBehavior = "none";
+    document.body.style.overflow = "hidden";
+    return () => {
+      window.visualViewport?.removeEventListener("resize", refreshViewport);
+      document.documentElement.style.overscrollBehavior = "";
+      document.body.style.overscrollBehavior = "";
+      document.body.style.overflow = "";
+    };
+  }, []);
   const counts = mobile ? { particles: 1400, stars: 900, glints: 120, photos: 36 } : { particles: 3000, stars: 1800, glints: 260, photos: 64 };
 
   const play = useCallback(() => {
@@ -955,7 +1034,7 @@ export default function GiftExperience({ onClose, audioRef }: {
       <Canvas
         flat
         dpr={[1, mobile ? 1.5 : 2]}
-        camera={{ position: [0, 0, 11], fov: 50, near: 0.1, far: 120 }}
+        camera={{ position: [0, 0, 11], fov: CAMERA_FOV, near: 0.1, far: 120 }}
         gl={{ antialias: !mobile, powerPreference: "high-performance" }}
         className="!absolute inset-0 touch-none"
       >
@@ -973,6 +1052,7 @@ export default function GiftExperience({ onClose, audioRef }: {
         <RealBouquetScene bouquet={bouquetImage} />
         <PhotoSpace hidden={letter} />
       </Canvas>
+      <DebugOverlay enabled={debug} />
 
       <div className="pointer-events-none absolute inset-0 z-[2] flex items-center justify-center">
         <img
