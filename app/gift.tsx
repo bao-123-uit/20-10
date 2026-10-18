@@ -42,6 +42,7 @@ const CAPTIONS = [
   { at: 19, text: "Thấy hay không em hihi." },
   { at: 31, text: "Em coi nhiều ảnh chưa nè hehe." },
 ];
+const CAPTION_HOLD_SECONDS = 7;
 
 const LETTER = {
   title: "Gửi Phương Linh,",
@@ -887,7 +888,7 @@ export default function GiftExperience({ onClose, audioRef }: {
 
     CAPTIONS.forEach((c) => {
       tl.call(() => setCaption(c.text), undefined, c.at);
-      tl.call(() => setCaption(""), undefined, c.at + 4.2);
+      tl.call(() => setCaption(""), undefined, c.at + CAPTION_HOLD_SECONDS);
     });
   }, []);
 
