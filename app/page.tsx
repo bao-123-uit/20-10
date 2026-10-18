@@ -128,7 +128,7 @@ function Petals() {
 const CORNER_FRIENDS = [
   { image: "/anh1.jpg", text: "Hello!", position: "left-2 top-20 sm:left-4 sm:top-24", tilt: -10, delay: 0 },
   { image: "/anh2.jpg", text: "Yay!", position: "right-2 top-20 sm:right-4 sm:top-24", tilt: 10, delay: 0.35 },
-  { image: "/anh3.jpg", text: "Ngon quá!", position: "bottom-2 left-2 sm:bottom-4 sm:left-4", tilt: 8, delay: 0.7 },
+  { image: "/anh3.jpg", text: "Hehee!", position: "bottom-2 left-2 sm:bottom-4 sm:left-4", tilt: 8, delay: 0.7 },
   { image: "/anh4.jpg", text: "Quạc quạc!", position: "bottom-2 right-2 sm:right-4 sm:bottom-4", tilt: -8, delay: 1.05 },
   { image: "/anh5.jpg", text: "Hí hí!", position: "left-2 top-1/2 -translate-y-1/2 sm:left-4", tilt: -6, delay: 1.4 },
   { image: "/anh6.jpg", text: "Đáng yêu!", position: "right-2 top-1/2 -translate-y-1/2 sm:right-4", tilt: 6, delay: 1.75 },
