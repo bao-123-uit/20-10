@@ -344,9 +344,15 @@ export default function Home() {
     const audio = audioRef.current;
     if (!audio) return;
 
-    audio.play()
-      .then(() => setPlaying(true))
-      .catch(() => setPlaying(false));
+    const playAudio = () => {
+      audio.play()
+        .then(() => setPlaying(true))
+        .catch(() => setPlaying(false));
+    };
+
+    playAudio();
+    window.addEventListener("pointerdown", playAudio, { once: true });
+    return () => window.removeEventListener("pointerdown", playAudio);
   }, []);
 
   const toggleMusic = () => {
@@ -361,10 +367,17 @@ export default function Home() {
     setGift(true);
   };
 
+  const handlePageInteraction = () => {
+    const audio = audioRef.current;
+    if (!audio || !audio.paused) return;
+    audio.play().then(() => setPlaying(true)).catch(() => {});
+  };
+
   const letters = SHORT_NAME.split("");
 
   return (
     <main
+      onPointerDown={handlePageInteraction}
       onPointerMove={(e) => { mx.set(e.clientX - 150); my.set(e.clientY - 150); }}
       className="relative min-h-screen overflow-hidden text-[#4A2C40]"
       style={{
